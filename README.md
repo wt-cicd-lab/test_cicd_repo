@@ -21,29 +21,38 @@ and a custom command-line name.
 
 ## CI
 
-Create the workflow manually from the organization template:
+Create both workflows manually from the organization templates in
+[wt-cicd-lab/.github](https://github.com/wt-cicd-lab/.github):
 
 1. Open [Actions > New workflow](https://github.com/wt-cicd-lab/test_cicd_repo/actions/new).
-2. Select **wt-cicd-lab C++ 构建与测试** and click **Configure**.
-3. Confirm the generated branch filters are `main` and commit the workflow to `main`.
+2. Add **wt-cicd-lab C++ 开发分支构建** to main.
+3. Add **wt-cicd-lab C++ 默认分支打标与归档** to main.
+4. The second commit triggers the first tag and artifact workflow.
 
-The starter template is maintained in [wt-cicd-lab/.github](https://github.com/wt-cicd-lab/.github).
-It enables pushes and pull requests targeting the default branch, plus manual runs.
-The previous workflow was removed so this template setup can be tested from the UI.
+Other branch pushes run Build Release and Test. Each main push runs Build
+Release and Test before creating a tag, then builds RelWithDebInfo and saves
+the workflow artifact. Pushes of the generated tags do not trigger these callers.
+Create development branches from the latest main so they contain the workflow.
+Remove any old cpp-ci.yml caller before installing both new templates.
 
-The generated workflow calls the test/wt-cicd-lab branch of the existing
-wwjszz/cicd_template repository. It selects the organization runner group
-lab-runners and the self-hosted runner label wt-cicd-lab, then executes
-Prepare, Build Release, and Test directly inside that runner. The runner image includes GCC/G++, Make, and CMake.
+The reusable implementation remains in wwjszz/cicd_template on branch
+test/wt-cicd-lab. It selects the organization runner group lab-runners and
+label wt-cicd-lab. Jobs compile directly inside that runner.
 
-Configure the CI_SSH_KEY Actions secret with an SSH private key authorized
-to read this repository. The workflow passes it to the reusable template for
-SSH checkout. For an organization secret, grant this repository access.
-GitHub Free private repositories need a repository-level secret instead.
+Configure CI_SSH_KEY with an SSH private key that can read this repository
+and push tags. Grant this repository access to the organization secret and
+runner group; allow public repositories in the group.
+GITHUB_TOKEN only needs contents: read because tag pushes use SSH.
 
-The runner deployment remains in wwjszz/cicd_runner on the same branch name.
-On the server, all three checkouts live under /home/wangwenjie/test_dev.
-Coverage, automatic tags, and releases are not enabled in this first exercise.
+## Automatic version tags and artifacts
 
-The organization group lab-runners must grant this repository access and
-allow public repositories. The group can later be shared with more lab repos.
+`./build.sh -T` only generates and pushes a version tag; it does not compile.
+The initial version is 0.1.0. Subsequent new commits increment the patch
+number based on existing numeric version tags: 0.1.1, 0.1.2, and so on.
+Running again on an already tagged commit reuses its version.
+Use -T alone; it cannot be combined with build or test options.
+
+The artifact is available on the Actions run page. It contains the full
+build/ directory as build-output.tar.gz, build-info.txt, and SHA256SUMS.
+The binary and static library are compiled with RelWithDebInfo.
+GitHub Release publication and coverage are not enabled in this exercise.
