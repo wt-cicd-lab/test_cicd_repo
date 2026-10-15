@@ -1,0 +1,13 @@
+name: C++ lab CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: wwjszz/cicd_template/.github/workflows/cpp-build.yml@test/wt-cicd-lab
